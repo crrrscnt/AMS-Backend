@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Детали{% endblock %}
+
+{% block content %}
+  <h2>{{ title }}</h2>
+  <div class="container-detail">
+    <img src="http://localhost:9000/lab1/images/{{ id }}.jpg"  alt="target" class="image-detail">
+    <div class="description-detail">
+        <p>{{ content|safe }}</p>
+        <p>Стоимость установки научного оборудования: {{ cost }}$/кг</p>
+        <!-- FOR TEST
+        <p class="down"><a href="{% url 'add_to_order' id %}" class="card-button">
+            Добавить в заявку</a></p>
+        -->
+    </div>
+  </div>
+{% endblock %}
