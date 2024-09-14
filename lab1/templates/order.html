@@ -9,8 +9,8 @@
 <table class="order-table">
   <thead class="order-table-header">
     <tr>
-      <th></th>
-      <th style="font-weight: normal">Количество услуг:&nbsp;&nbsp;{{ count }}</th>
+        <th style="font-weight: normal">Порядок посещения</th>
+      <th style="font-weight: normal">Услуги</th>
       <th class="order-table-child">
         <table class="order-table-child-table">
           <tr>
@@ -24,8 +24,8 @@
   <tbody>
     {% for order in orders %}
       <tr>
-        <td style="width: 32px;">.</td>
-        <td style="width: 70%" class="order-list-item">
+        <td style="width: 160px;">.</td>
+        <td style="width: 60%" class="order-list-item">
           <table class="order-list-item">
             <tr>
               <td class="order-list-item-img">
@@ -54,7 +54,7 @@
     {% endfor %}
   </tbody>
 </table>
-
+<div> Количество услуг: {{ count }}</div>
 {% else %}
 <p>Список услуг пуст.</p>
 {% endif %}
