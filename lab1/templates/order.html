@@ -29,10 +29,10 @@
           <table class="order-list-item">
             <tr>
               <td class="order-list-item-img">
-                <img src="http://localhost:9000/lab1/images/{{ order.id }}.jpg" alt="{{ order.title }}" class="img">
+                <img src="http://localhost:9000/lab1/images/{{ order.ord_vis }}.jpg" alt="{{ order.title }}" class="img">
               </td>
               <td class="order-list-item-info">
-                <div>Объект — {{ order.title }}. Миссия "{{ order.mission }}"</div> 
+                <div>Объект — {{ order.title }}. АМС — "{{ order.ais }}"</div> 
                   <div style="font-size: 14px">{{ order.content|truncatewords:10 }}</div>
                 <div>Стоимость: {{ order.price }}$/кг
                 <p>Планируемый старт: {{ order.start }}</p></div>
