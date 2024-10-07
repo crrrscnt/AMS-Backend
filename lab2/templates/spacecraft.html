@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Полёт {% endblock %}
+
+{% block content %}
+
+  <div class="input_field_container">
+    <form class="text-field" method="get">
+      <label class="text-field__label" for="spacecraft_name">Название АМС</label>
+      <input class="text-field__input" type="text"
+             id="spacecraft_name" name="spacecraft_name"
+             placeholder="Введите название..." value="{{ spacecraft.name }}">
+      <label class="text-field__label" for="object_name">Описание</label>
+      <input class="text-field__input" type="text"
+             id="spacecraft_description" name="spacecraft_description"
+             placeholder="Введите описание..." value="{{ spacecraft.description }}">
+      <label class="text-field__label" for="object_name">Запланированный старт</label>
+      <input class="date-field__input" type="date"
+             id="spacecraft_date" name="spacecraft_date" value="{{ spacecraft.date }}">
+    </form>
+  </div>
+
+  <div class="container-upper">
+    <table style="width: 100%">
+      <tr>
+        <td style="width: 70%">
+          <h3>Объекты полёта #{{ draft_request.id }}</h3>
+        </td>
+        <td style="width: 30%; text-align: end">
+          <!--<div>Создана: {{ draft_request.created_at }}<br>Статус: {{ status_name }}<br>
+            Космических объектов: {{ num_draft_request }}
+          </div>-->
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="container">
+    {% for object in space_objects %}
+      {% include 'include/small_card.html' %}
+    {% endfor %}
+  </div>
+
+  <table>
+    <tr>
+      <td>
+        <div class="button-request-container">
+          <form action="{% url 'delete_spacecraft' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="spacecraft_id" value="{{ draft_request.id }}">
+            <button type="submit" name="delete_spacecraft">Удалить заявку</button>
+          </form>
+        </div>
+      </td>
+    </tr>
+  </table>
+{% endblock %}

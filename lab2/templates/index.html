@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Услуги АМС{% endblock %}
+
+{% block content %}
+<!--<h1>{{ title }}</h1>-->
+<div class="container-upper">
+  <div class="form-container">
+  <form class="text-field" method="get">
+    <label class="text-field__label" for="space_object"></label>
+    <input class="text-field__input icon" type="text"
+           id="space_object" name="space_object"
+           placeholder="Поиск объекта" value="{{ space_object }}">
+  </form>
+  </div>
+  <div class="image-container">
+    {% if draft_request %}
+      <a href="{% url 'spacecraft' draft_request.id %}">
+        <img src="{% static 'images/cart.png' %}" alt="Cart Image">
+        <div class="text-overlay">{{ num_objects }}</div>
+      </a>
+    {% else %}
+      <img src="{% static 'images/cart.png' %}" alt="Cart Image" class="no-click">
+      <div class="text-overlay">{{ num_objects }}</div>
+    {% endif %}
+  </div>
+</div>
+<div class="container-upper">
+  <table style="width: 100%">
+    <tr>
+      <td style="width: 70%">
+        <h2>Каталог космических объектов</h2>
+      </td>
+      <td style="width: 30%; text-align: end">
+        <!--<div>Количество услуг<br>в заявке {{ draft_request.id }}:
+            <p style="font-weight: bold">{{ num_objects }}</p>
+        </div>-->
+      </td>
+    </tr>
+  </table>
+</div>
+<div class="container">
+  {% for object in space_objects %}
+    {% include 'include/card.html' %}
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Детали
+{% endblock %}
+
+{% block content %}
+  <h2>{{ space_object.name }}</h2>
+  <div class="container-detail">
+    <img src="{{ space_object.image_url }}"  alt="{{ space_object.name }}" class="image-detail">
+    <div class="description-detail">
+      <p>{{ space_object.description|safe|linebreaks }}</p>
+      <!--<p class="down">
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit">Добавить в заявку</button>
+        </form>
+      </p>-->
+    </div>
+  </div>
+{% endblock %}
