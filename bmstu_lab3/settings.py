@@ -60,7 +60,7 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        #'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -95,12 +95,27 @@ WSGI_APPLICATION = 'bmstu_lab3.wsgi.application'
 
 DATABASES = {
     'default': {
+        # контейнер
         'ENGINE': 'django.db.backends.postgresql',   # Используется PostgreSQL
         'NAME': 'postgres', # Имя базы данных
         'USER': 'postgres', # Имя пользователя
         'PASSWORD': 'postgres', # Пароль пользователя
-        'HOST': 'pgdb3', # Наименование контейнера для базы данных в Docker Compose
+        'HOST': 'pgdb', # Наименование контейнера для базы данных в Docker Compose
         'PORT': '5432',  # Порт базы данных
+
+
+# локальная БД
+		#'ENGINE': 'django.db.backends.postgresql_psycopg2',
+
+        #'NAME': 'temp',
+        #
+        #'USER': 'postgres',
+        #
+        #'PASSWORD': '222',
+        #
+        #'HOST': 'localhost',
+        #
+        #'PORT': '5432',
 	}
 }
 
@@ -109,18 +124,18 @@ DATABASES = {
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-#    {
-#        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-#    },
-#    {
-#        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-#    },
-#    {
-#        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-#    },
-#    {
-#        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-#    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
 
@@ -153,3 +168,9 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AWS_STORAGE_BUCKET_NAME = 'images'
+AWS_ACCESS_KEY_ID = 'admin'
+AWS_SECRET_ACCESS_KEY = '12345678'
+AWS_S3_ENDPOINT_URL = 'localhost:9000'
+MINIO_USE_SSL = False

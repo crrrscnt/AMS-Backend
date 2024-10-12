@@ -1,89 +1,83 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
-from lab.models import SpaceObject, UncrewedSpacecraft, Flight
-
-'''
-Простые реализации по умолчанию для методов create() и update().
-https://ilyachch.gitbook.io/django-rest-framework-russian-documentation/overview/quickstart/1-serialization
-'''
+from lab.models import SpaceObject, UncrewedSpacecraft, FlightSpaceObject, \
+    AuthUser
+from django.contrib.auth.hashers import make_password
 
 
 class SpaceObjectSerializer(serializers.ModelSerializer):
     class Meta:
-        # Модель, которую мы сериализуем
         model = SpaceObject
-        # Поля, которые мы сериализуем
+        fields = '__all__'
+        # fields = ('id', 'name', 'description', 'image_url')
+
+
+class SpaceObjectSerializer2(serializers.ModelSerializer):
+    class Meta:
+        model = SpaceObject
+        fields = ('name', 'image_url')
+
+
+class FlightSpaceObjectSerializer(serializers.ModelSerializer):
+    space_object = SpaceObjectSerializer()
+
+    class Meta:
+        model = FlightSpaceObject
         # fields = '__all__'
-        fields = ('id', 'name', 'uncrewed_spacecraft', 'description', 'price', 'scheduled_at',
-                  'image_url')
+        fields = ['id', 'space_object', 'create_date', 'is_priority']
 
-
-class SpaceObjectDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SpaceObject
-        fields = '__all__'
-        # fields = ('id', 'name', 'ais', 'scheduled_at')
-
-
-class UncrewedSpacecraftSerializer(serializers.ModelSerializer):
-    space_objects = SpaceObjectDetailSerializer(many=True, read_only=True)
+class FlightSpaceObjectSerializer2(serializers.ModelSerializer):
+    space_object = SpaceObjectSerializer2()
 
     class Meta:
-        model = UncrewedSpacecraft
-        fields = '__all__'
-        # fields = ('id', )
+        model = FlightSpaceObject
+        # fields = '__all__'
+        fields = ['id', 'space_object', 'create_date', 'is_priority']
 
-
-class UncrewedSpacecraftDetailSerializer(serializers.ModelSerializer):
-    space_objects = SpaceObjectDetailSerializer(many=True, read_only=True)
+class SpacecraftSerializer(serializers.ModelSerializer):
+    space_objects = FlightSpaceObjectSerializer2(many=True, read_only=True)
+    object_count = serializers.SerializerMethodField()
 
     class Meta:
         model = UncrewedSpacecraft
         fields = '__all__'
 
+    def get_object_count(self, obj):
+        return obj.space_objects.count()
 
-class FlightSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Flight
-        fields = '__all__'
-
-class FlightDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Flight
-        fields = '__all__'
 
 class UserSerializer(serializers.ModelSerializer):
+    space_objects = FlightSpaceObjectSerializer(many=True, read_only=True)
     class Meta:
-        model = User
-        fields = ('username', 'email', 'password')
+        model = AuthUser
+        fields = ('id','username', 'email', 'password', 'space_objects')
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        if User.objects.filter(username=validated_data['username']).exists():
+        if AuthUser.objects.filter(username=validated_data['username']).exists():
             raise ValidationError(
                 "Пользователь с таким именем уже существует.")
-        if User.objects.filter(email=validated_data['email']).exists():
+        if AuthUser.objects.filter(email=validated_data['email']).exists():
             raise ValidationError(
                 "Пользователь с таким адресом электронной почты уже существует.")
 
-        user = User(**validated_data)
-        user.set_password(validated_data['password'])
-        user.save()
+        validated_data['password'] = make_password(validated_data['password'])
+        user = AuthUser.objects.create(**validated_data)
         return user
-
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('username', 'email', 'password')
+        model = AuthUser
+        # fields = ('username', 'email', 'password')
+        fields = ('username', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
     def update(self, instance, validated_data):
         if 'password' in validated_data:
             instance.set_password(validated_data['password'])
         instance.username = validated_data.get('username', instance.username)
-        instance.email = validated_data.get('email', instance.email)
+        # instance.email = validated_data.get('email', instance.email)
         instance.save()
         return instance

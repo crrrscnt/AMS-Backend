@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import SpaceObject, UncrewedSpacecraft, Flight
+from .models import SpaceObject, FlightSpaceObject, UncrewedSpacecraft
 
 admin.site.register(SpaceObject)
 admin.site.register(UncrewedSpacecraft)
-admin.site.register(Flight)
+admin.site.register(FlightSpaceObject)
