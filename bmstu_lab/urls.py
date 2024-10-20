@@ -1,12 +1,17 @@
 from django.contrib import admin
 from django.urls import path, include
-from lab import views
-from lab.views import page_not_found
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from rest_framework import routers
+from rest_framework.permissions import AllowAny
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('lab.urls')),
-    path('api/', include('api.urls')),
-]
 
-handler404 = page_not_found
+    path('api/', include('api.urls')),
+    # Генерация OpenAPI схемы
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # Swagger UI
+    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    # Redoc
+    path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+]
