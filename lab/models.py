@@ -107,8 +107,8 @@ class FlightSpaceObject(models.Model):
     #                         verbose_name="Создатель АМС")
     create_date = models.DateField(null=True, blank=True,
                                    verbose_name="Дата создания заявки")
-    is_priority = models.BooleanField(default=False,
-                                      verbose_name="Приоритетный")
+    completed_successfully = models.BooleanField(default=False,
+                                                 verbose_name="Завершено успешно")
 
     class Meta:
         db_table = 'spacecraft_spaceobject'

@@ -18,7 +18,7 @@ from lab.models import SpaceObject, UncrewedSpacecraft, FlightSpaceObject, \
 from api.serializers import (SpaceObjectSerializer,
                              SpacecraftSerializer,
                              UserSerializer, UserUpdateSerializer,
-                             FlightSpaceObjectSerializer)
+                             FlightSpaceObjectSerializer, SpacecraftSerializerForList)
 from datetime import date
 
 
@@ -65,6 +65,8 @@ class SpaceObjectList(APIView):
             {
                 'spacecraft': spacecraft_serializer.data.get(
                     'id') if draft_request else None,
+                'space objects in spacecraft': spacecraft_serializer.data.get(
+                    'space_object_count'),
                 'space objects': serializer.data
             }
         )
@@ -185,7 +187,7 @@ class SpaceObjectDetail(APIView):
 
 class SpacecraftList(APIView):
     # permission_classes = [IsAuthenticated]
-    permission_classes = [AllowAny]
+    #permission_classes = [AllowAny]
 
     # ЗАЯВКИ_1.GET список
     def get(self, request, format=None):
@@ -200,7 +202,8 @@ class SpacecraftList(APIView):
             Q(creator=user1) | Q(moderator=user1)
             # Проверяем, является ли пользователь создателем или модератором
         )
-        serializer = SpacecraftSerializer(spacecrafts, many=True)
+        #serializer = SpacecraftSerializer(spacecrafts, many=True)
+        serializer = SpacecraftSerializerForList(spacecrafts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # def post(self, request, *args, **kwargs):

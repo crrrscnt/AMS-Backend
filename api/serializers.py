@@ -4,19 +4,20 @@ from django.core.exceptions import ValidationError
 from lab.models import SpaceObject, UncrewedSpacecraft, FlightSpaceObject, \
     AuthUser
 from django.contrib.auth.hashers import make_password
-
+from collections import OrderedDict
 
 class SpaceObjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpaceObject
-        fields = '__all__'
-        # fields = ('id', 'name', 'description', 'image_url')
+        # fields = '__all__'
+        fields = ['id', 'name', 'description', 'image_url']
 
-
-class SpaceObjectSerializer2(serializers.ModelSerializer):
-    class Meta:
-        model = SpaceObject
-        fields = ('name', 'image_url')
+        def get_fields(self):
+            new_fields = OrderedDict()
+            for name, field in super().get_fields().items():
+                field.required = False
+                new_fields[name] = field
+            return new_fields
 
 
 class FlightSpaceObjectSerializer(serializers.ModelSerializer):
@@ -25,27 +26,33 @@ class FlightSpaceObjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = FlightSpaceObject
         # fields = '__all__'
-        fields = ['id', 'space_object', 'create_date', 'is_priority']
+        fields = ['id', 'space_object', 'create_date', 'completed_successfully']
 
-class FlightSpaceObjectSerializer2(serializers.ModelSerializer):
-    space_object = SpaceObjectSerializer2()
-
-    class Meta:
-        model = FlightSpaceObject
-        # fields = '__all__'
-        fields = ['id', 'space_object', 'create_date', 'is_priority']
 
 class SpacecraftSerializer(serializers.ModelSerializer):
-    space_objects = FlightSpaceObjectSerializer2(many=True, read_only=True)
-    object_count = serializers.SerializerMethodField()
+    space_objects = FlightSpaceObjectSerializer(many=True, read_only=True)
+    space_object_count = serializers.SerializerMethodField()
 
     class Meta:
         model = UncrewedSpacecraft
         fields = '__all__'
 
-    def get_object_count(self, obj):
+    def get_space_object_count(self, obj):
         return obj.space_objects.count()
 
+    #def get_object_count(self, obj):
+    #    return obj.space_objects.count()
+
+class SpacecraftSerializerForList(serializers.ModelSerializer):
+    # space_objects = FlightSpaceObjectSerializer(many=True, read_only=True)
+    # space_object_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UncrewedSpacecraft
+        fields = '__all__'
+
+    # def get_space_object_count(self, obj):
+    #     return obj.space_objects.count()
 
 class UserSerializer(serializers.ModelSerializer):
     space_objects = FlightSpaceObjectSerializer(many=True, read_only=True)
