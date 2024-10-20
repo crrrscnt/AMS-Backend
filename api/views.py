@@ -287,20 +287,26 @@ class FlightObject(APIView):  # m-m
             )
         except FlightSpaceObject.DoesNotExist:
             return Response({"error": "Объект полета не найден."}, status=status.HTTP_404_NOT_FOUND)
+        flight_object = get_object_or_404(FlightSpaceObject,
+                                          spacecraft_id=pk_spacecraft,
+                                          space_object_id=pk_space_object)
 
         # Извлекаем значение is_priority из запроса
-        is_priority = request.data.get('is_priority', None)
+        serializer = FlightSpaceObjectSerializer(flight_object,
+                                                 data=request.data,
+                                                 partial=True)
+        if serializer.is_valid():
+            # Автоматическое заполнение поля SpaceObject.name
+            space_object_name = serializer.validated_data.get(
+                'space_object', {}).get('name')
+            if space_object_name:
+                space_object = flight_object.space_object
+                space_object.name = space_object_name
+                space_object.save()
 
-        if is_priority is not None:
-            # Обновляем поле is_priority
-            flight_space_object.is_priority = is_priority
-            flight_space_object.save()
-
-            # Сериализуем обновленный объект для ответа
-            serializer = FlightSpaceObjectSerializer(flight_space_object)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Поле 'is_priority' не указано."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
     #     def put(self, request, pk_spacecraft, pk_space_object,
