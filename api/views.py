@@ -41,6 +41,11 @@ session_storage = redis.StrictRedis(host=settings.REDIS_HOST,
                                     port=settings.REDIS_PORT)
 
 
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    def enforce_csrf(self, request):
+        return
+
+
 def method_permission_classes(classes):
     def decorator(func):
         def decorated_func(self, *args, **kwargs):
@@ -54,7 +59,7 @@ def method_permission_classes(classes):
 
 
 class SpaceObjectList(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
     # permission_classes = [AllowAny]
 
     spaceobject_model_class = SpaceObject
@@ -131,7 +136,7 @@ class SpaceObjectList(APIView):
 
 
 class SpaceObjectDetail(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
     # permission_classes = [IsAuthenticated]
 
     model_class = SpaceObject
@@ -234,12 +239,13 @@ class SpaceObjectDetail(APIView):
         if draft_request:
             # 1. Заявка-черновик существует
             flight_space_object = FlightSpaceObject.objects.filter(
-                spacecraft=draft_request, space_object=space_object).first()
+                spacecraft=draft_request,
+                space_object=space_object).first()
 
             if not flight_space_object:
                 # Связь не существует, создаем ее
                 FlightSpaceObject.objects.create(
-                    # spacecraft=draft_request,
+                    spacecraft=draft_request,
                     space_object=space_object,
                     create_date=date.today()
                 )
@@ -272,8 +278,9 @@ class SpaceObjectDetail(APIView):
 
 
 class SpacecraftList(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
+
+    # permission_classes = [IsAuthenticated]
 
     # ЗАЯВКИ_1.GET список
     @extend_schema(
@@ -301,8 +308,11 @@ class SpacecraftList(APIView):
 
 
 class SpacecraftDetail(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    # permission_classes = [IsAuthenticated]
+    # authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication]
+    # authentication_classes = []
+
+    permission_classes = [IsAdmin | IsManager | IsCreator]
 
     # ЗАЯВКИ_2.GET одна запись
     @extend_schema(
@@ -313,7 +323,9 @@ class SpacecraftDetail(APIView):
                                  description="Информация о АМС")
         }
     )
-    @method_permission_classes((IsAdmin, IsManager, IsCreator,))
+    @method_decorator(csrf_exempt, name='dispatch')
+    # @method_permission_classes((IsAdmin, IsManager, IsCreator,))
+    # @method_permission_classes((IsAuthenticated,))
     def get(self, request, pk, format=None):
         # user = authenticate_user()
         user = request.user
@@ -345,7 +357,7 @@ class SpacecraftDetail(APIView):
         # check_moderator(user)
         spacecraft = get_object_or_404(
             UncrewedSpacecraft.objects.exclude(status='deleted').filter(
-                Q(creator=user)), pk=pk)
+                Q(creator=user) | Q(moderator=user)), pk=pk)
 
         serializer = SpacecraftSerializer(spacecraft, data=request.data,
                                           partial=True)
@@ -383,8 +395,8 @@ class SpacecraftDetail(APIView):
 
 
 class FlightObject(APIView):  # m-m
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
-    permission_classes = [IsAdmin|IsManager]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdmin | IsManager]
 
     # M-M_1.DELETE удаление из заявки (без PK м-м)
     @extend_schema(
@@ -463,7 +475,7 @@ class FlightObject(APIView):  # m-m
     }
 )
 @api_view(['POST'])
-@permission_classes([IsAdmin|IsManager])
+@permission_classes([IsAdmin | IsManager])
 @authentication_classes([IsAuthenticated])
 def add_image(request, pk, format=None):
     space_object = get_object_or_404(SpaceObject, pk=pk)
@@ -493,8 +505,8 @@ def add_image(request, pk, format=None):
 )
 @api_view(['PUT'])
 # @permission_classes([IsAdmin | IsManager])
-@permission_classes([IsAdmin|IsManager|IsCreator])
-@authentication_classes([SessionAuthentication])
+@permission_classes([IsAdmin | IsManager | IsCreator])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def save_spacecraft(request, pk, format=None):
     # user = authenticate_user()
     user = request.user
@@ -548,15 +560,15 @@ def save_spacecraft(request, pk, format=None):
     }
 )
 @api_view(['PUT'])
-@permission_classes([IsAdmin|IsManager])
-@authentication_classes([SessionAuthentication])
+@permission_classes([IsAdmin | IsManager])
+@authentication_classes([CsrfExemptSessionAuthentication])
 def moderate_spacecraft(request, pk, format=None):
     # user = authenticate_user()
     user = request.user
     # user1 = request.user
     spacecraft = get_object_or_404(
         UncrewedSpacecraft.objects.exclude(status='deleted'), pk=pk)
-    # if user == spacecraft.moderator:
+    #     if user == spacecraft.moderator:
     if request.data.get('status') in ('completed', 'rejected'):
         spacecraft.status = request.data.get('status')
         spacecraft.moderator = user
@@ -570,9 +582,9 @@ def moderate_spacecraft(request, pk, format=None):
             {
                 'status': 'Модератор может изменить статус только на completed или rejected'})
 
-    #else:
-    #    raise ValidationError(
-    #        {'error': 'У вас нет прав для изменения этой заявки'})
+    #     else:
+    #         raise ValidationError(
+    #             {'error': 'У вас нет прав для изменения этой заявки'})
 
     serializer = SpacecraftSerializer(spacecraft, data=request.data,
                                       partial=True)
@@ -584,7 +596,7 @@ def moderate_spacecraft(request, pk, format=None):
 
 
 class UserRegistration(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
 
     @extend_schema(
@@ -619,7 +631,7 @@ class UserRegistration(APIView):
 
 
 class UserPut(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
     model = get_user_model()
     serializer_class = UserSerializer
 
@@ -635,7 +647,8 @@ class UserPut(APIView):
             400: OpenApiResponse(description="ID пользователя не предоставлен")
         }
     )
-    @method_permission_classes((IsAdmin,IsManager))
+    @method_decorator(csrf_exempt, name='dispatch')
+    @method_permission_classes((IsAdmin, IsManager))
     def put(self, request, pk, format=None):
         try:
             user = AuthUser.objects.get(pk=pk)
@@ -685,7 +698,7 @@ class LoginView(APIView):
             404: OpenApiResponse(description="Провалена")
         }
     )
-    # @method_decorator(csrf_exempt)
+    @method_decorator(csrf_exempt, name='dispatch')
     def post(self, request, format=None):  # аутентификация
         email = request.data.get("email")
         password = request.data.get("password")
@@ -708,7 +721,8 @@ class LoginView(APIView):
                 if session_storage.get(old_ssid):
                     session_storage.delete(old_ssid)
 
-            response = Response({'status': 'ok'}, status=status.HTTP_200_OK)
+            response = Response({'status': 'ok', 'session_id': random_key},
+                                status=status.HTTP_200_OK)
             response.set_cookie("session_id", random_key)
             login(request, user)
 
@@ -729,7 +743,7 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
-    authentication_classes = [SessionAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
@@ -741,8 +755,7 @@ class LogoutView(APIView):
             403: OpenApiResponse(description="Ошибка. Сеанс не завершен.")
         }
     )
-    @csrf_exempt
-    # @method_decorator(csrf_exempt)
+    @method_decorator(csrf_exempt, name='dispatch')
     # @method_permission_classes((IsAuthenticated,))
     def post(self, request, format=None):
         user = request.user
@@ -766,7 +779,7 @@ class LogoutView(APIView):
 
 
 class UserList(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
     # permission_classes = [IsAuthenticated]
     permission_classes = [AllowAny]
 
@@ -785,7 +798,7 @@ class UserList(APIView):
 
 
 class UserDetail(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
 
     http_method_names = ['get']
@@ -811,7 +824,7 @@ class UserDetail(APIView):
 
 
 class UserDelete(APIView):
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    authentication_classes = [CsrfExemptSessionAuthentication, BasicAuthentication]
     permission_classes = [AllowAny]
 
     @extend_schema(
@@ -835,7 +848,6 @@ class UserDelete(APIView):
                                 status=status.HTTP_404_NOT_FOUND)
         return Response({"error": "User ID not provided"},
                         status=status.HTTP_400_BAD_REQUEST)
-
 
 # class SomeView(APIView):
 #     permission_classes = [IsAuthenticatedUser]

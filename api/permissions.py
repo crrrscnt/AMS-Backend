@@ -3,9 +3,6 @@ from rest_framework import permissions
 from api.get_user import authenticate_user
 
 
-# from api.get_user import authenticate_user
-
-
 class IsManager(permissions.BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and (
@@ -37,5 +34,6 @@ class IsAnyUser(permissions.BasePermission):
 
 class IsCreator(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if obj.creator == request.user:
-            return True
+        if not request.user.is_authenticated:
+            return False
+        return obj.creator == request.user
