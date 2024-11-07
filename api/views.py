@@ -58,7 +58,7 @@ class SpaceObjectList(APIView):
         space_objects = self.spaceobject_model_class.objects.filter(
             is_active=True)
         if query_search:
-            space_objects = space_objects.filter(name=query_search)
+            space_objects = space_objects.filter(name__icontains=query_search)
         serializer = self.spaceobject_serializer_class(space_objects,
                                                        many=True)
         return Response(
